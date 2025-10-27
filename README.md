@@ -1,6 +1,6 @@
-# Welcome to your Expo app 👋
+# Ferment Log 🍺
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native app for tracking fermentation batches, built with Expo and featuring a modern UI system powered by GluestackUI and NativeWind.
 
 ## Get started
 
@@ -23,7 +23,20 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Tech Stack
+
+- **Expo** - React Native development platform
+- **GluestackUI** - Modern UI component library
+- **NativeWind** - Tailwind CSS for React Native
+- **TypeScript** - Type-safe development
+- **File-based routing** - Expo Router for navigation
+
+## Features
+
+- Modern, accessible UI components
+- Tailwind CSS styling system
+- Cross-platform compatibility (iOS, Android, Web)
+- Type-safe development with TypeScript
 
 ## Get a fresh project
 
