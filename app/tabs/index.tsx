@@ -1,8 +1,8 @@
+import Gradient from '@/assets/icons/Gradient';
+import Logo from '@/assets/icons/Logo';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import React from 'react';
-import Gradient from '../assets/icons/Gradient';
-import Logo from '../assets/icons/Logo';
 
 import { Button, ButtonText } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
@@ -38,7 +38,7 @@ export default function Home() {
           <Box className="gap-10 base:flex-col sm:flex-row justify-between sm:w-[80%] md:flex-1">
             <Box className="bg-background-template py-2 px-6 rounded-full items-center flex-column md:flex-row md:self-start">
               <Text className="text-white font-medium">
-                Get started by editing 3
+                Get started by editing me 1
               </Text>
               <Text className="text-white font-medium ml-2">./App.tsx or ./app/index.tsx (or whatever entry point you have)</Text>
             </Box>

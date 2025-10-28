@@ -175,8 +175,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        heading: undefined,
-        body: undefined,
+        heading: ['FunnelSans'],
+        body: ['Roboto'],
         mono: undefined,
         jakarta: ['var(--font-plus-jakarta-sans)'],
         roboto: ['var(--font-roboto)'],
