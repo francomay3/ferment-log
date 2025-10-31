@@ -38,6 +38,18 @@ In the output, you'll find options to open the app in a
 - Cross-platform compatibility (iOS, Android, Web)
 - Type-safe development with TypeScript
 
+## Database
+
+This project uses Drizzle ORM with Expo SQLite.
+
+- Generate migrations from the current schema:
+
+  ```bash
+  npm run db:generate
+  ```
+
+- Migrations are applied at runtime automatically when the app starts (via Drizzle migrator). See `db/README.md` for details and schema examples.
+
 ## Get a fresh project
 
 When you're ready, run:

@@ -1,92 +1,103 @@
-import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
-export const usersTable = sqliteTable("users_table", {
+import { sql } from "drizzle-orm";
+import {
+  check,
+  index,
+  int,
+  real,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
+
+/** INGREDIENTS (catalog) */
+export const ingredientsTable = sqliteTable("ingredients_table", {
   id: int().primaryKey({ autoIncrement: true }),
-  name: text().notNull(),
-  age: int().notNull(),
-  email: text().notNull().unique(),
+  name: text().notNull().unique(),
+  unit: text().notNull(), // e.g. "g", "ml"
 });
 
-// // lib/database/schema.ts
-// import { InferInsertModel, InferSelectModel } from "drizzle-orm";
-// import { integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+/** MEASUREMENT TYPES (catalog) */
+export const measurementTypesTable = sqliteTable("measurement_types_table", {
+  id: int().primaryKey({ autoIncrement: true }),
+  key: text().notNull().unique(), // e.g. "temp", "ph", "sg"
+  name: text().notNull(), // display name
+  defaultUnit: text().notNull(), // "°C", "pH", ""
+});
 
-// export const ingredient = sqliteTable("ingredient", {
-//   id: integer("id").primaryKey(),
-//   name: text("name").notNull(),
-//   unit: text("unit"),
-//   description: text("description"),
-// }, (t) => ({
-//   nameIdx: uniqueIndex("ux_ingredient_name").on(t.name),
-// }));
+/** BATCHES */
+export const batchesTable = sqliteTable(
+  "batches_table",
+  {
+    id: int().primaryKey({ autoIncrement: true }),
+    name: text().notNull(),
+    description: text(),
+    image: text(),
+    archived: int({ mode: "boolean" }).notNull().default(false),
+    finalVolume: real(),
+    initialVolume: real().notNull(),
+    volumeUnit: text().notNull().default("L"),
+    rating: int(),
+    createdAt: text().notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    check(
+      "rating_range",
+      sql`${t.rating} IS NULL OR (${t.rating} BETWEEN 1 AND 5)`
+    ),
+    check("initial_volume_pos", sql`${t.initialVolume} > 0`),
+  ]
+);
 
-// export const measurementType = sqliteTable("measurement_type", {
-//   id: integer("id").primaryKey(),
-//   name: text("name").notNull(),
-//   canonicalUnit: text("canonical_unit").notNull(),
-//   decimals: integer("decimals"),
-//   minValue: real("min_value"),
-//   maxValue: real("max_value"),
-//   higherIsBetter: integer("higher_is_better", { mode: "boolean" }),
-//   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-// }, (t) => ({
-//   nameIdx: uniqueIndex("ux_measurement_type_name").on(t.name),
-// }));
+/** LOG ENTRIES (one-to-many under batch) */
+export const logEntriesTable = sqliteTable(
+  "log_entries_table",
+  {
+    id: int().primaryKey({ autoIncrement: true }),
+    batchId: int()
+      .notNull()
+      .references(() => batchesTable.id, { onDelete: "cascade" }),
+    occurredAt: text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    notes: text(),
+  },
+  (t) => [index("idx_log_entries_batch").on(t.batchId)]
+);
 
-// export const batch = sqliteTable("batch", {
-//   id: integer("id").primaryKey(),
-//   name: text("name").notNull(),
-//   startedAt: text("started_at"),
-//   status: text("status"),
-//   description: text("description"),
-//   image: text("image"),
-//   archived: integer("archived", { mode: "boolean" }).notNull().default(false),
-//   abv: real("abv"),
-//   volume: real("volume"),
-//   rating: real("rating"),
-//   initialVolume: real("initial_volume"),
-//   createdAt: text("created_at").notNull().default("datetime('now')"),
-// });
+/** INGREDIENT LINES per log entry (with amount) */
+export const logEntryIngredientsTable = sqliteTable(
+  "log_entry_ingredients_table",
+  {
+    id: int().primaryKey({ autoIncrement: true }),
+    logEntryId: int()
+      .notNull()
+      .references(() => logEntriesTable.id, { onDelete: "cascade" }),
+    ingredientId: int()
+      .notNull()
+      .references(() => ingredientsTable.id, { onDelete: "restrict" }),
+    amount: real().notNull(), // number added at this entry
+  },
+  (t) => [
+    index("idx_lei_entry").on(t.logEntryId),
+    index("idx_lei_ing").on(t.ingredientId),
+    check("lei_amount_pos", sql`${t.amount} > 0`),
+  ]
+);
 
-// export const logEntry = sqliteTable("log_entry", {
-//   id: integer("id").primaryKey(),
-//   batchId: integer("batch_id").notNull().references(() => batch.id, { onDelete: "cascade" }),
-//   entryAt: text("entry_at").notNull(),
-//   stage: text("stage"),
-//   notes: text("notes"),
-// });
-
-// export const logEntryIngredient = sqliteTable("log_entry_ingredient", {
-//   logEntryId: integer("log_entry_id").notNull().references(() => logEntry.id, { onDelete: "cascade" }),
-//   lineNo: integer("line_no").notNull(),
-//   ingredientId: integer("ingredient_id").notNull().references(() => ingredient.id),
-//   quantity: real("quantity").notNull(),
-//   unit: text("unit"),
-//   lineNote: text("line_note"),
-// }, (t) => ({
-//   pk: primaryKey({ columns: [t.logEntryId, t.lineNo] }),
-// }));
-
-// export const logEntryMeasurement = sqliteTable("log_entry_measurement", {
-//   id: integer("id").primaryKey(),
-//   logEntryId: integer("log_entry_id").notNull().references(() => logEntry.id, { onDelete: "cascade" }),
-//   measurementTypeId: integer("measurement_type_id").notNull().references(() => measurementType.id),
-//   value: real("value").notNull(),
-//   unit: text("unit").notNull(),
-//   measuredAt: text("measured_at"),
-//   mNote: text("note"),
-// });
-
-// // Tipos inferidos
-// export type Ingredient = InferSelectModel<typeof ingredient>;
-// export type NewIngredient = InferInsertModel<typeof ingredient>;
-// export type MeasurementType = InferSelectModel<typeof measurementType>;
-// export type NewMeasurementType = InferInsertModel<typeof measurementType>;
-// export type Batch = InferSelectModel<typeof batch>;
-// export type NewBatch = InferInsertModel<typeof batch>;
-// export type LogEntry = InferSelectModel<typeof logEntry>;
-// export type NewLogEntry = InferInsertModel<typeof logEntry>;
-// export type LogEntryIng = InferSelectModel<typeof logEntryIngredient>;
-// export type NewLogEntryIng = InferInsertModel<typeof logEntryIngredient>;
-// export type LogEntryMeas = InferSelectModel<typeof logEntryMeasurement>;
-// export type NewLogEntryMeas = InferInsertModel<typeof logEntryMeasurement>;
-
+/** MEASUREMENT VALUES per log entry */
+export const logEntryMeasurementsTable = sqliteTable(
+  "log_entry_measurements_table",
+  {
+    id: int().primaryKey({ autoIncrement: true }),
+    logEntryId: int()
+      .notNull()
+      .references(() => logEntriesTable.id, { onDelete: "cascade" }),
+    measurementTypeId: int()
+      .notNull()
+      .references(() => measurementTypesTable.id, { onDelete: "restrict" }),
+    value: real().notNull(),
+  },
+  (t) => [
+    index("idx_lem_entry").on(t.logEntryId),
+    index("idx_lem_type").on(t.measurementTypeId),
+    uniqueIndex("uniq_lem_entry_type").on(t.logEntryId, t.measurementTypeId),
+  ]
+);
