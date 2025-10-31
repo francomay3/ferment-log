@@ -175,7 +175,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        heading: ['FunnelSans'],
+        heading: ['Temp'],
         body: ['Roboto'],
         mono: undefined,
         jakarta: ['var(--font-plus-jakarta-sans)'],
