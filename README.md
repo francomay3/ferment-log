@@ -1,4 +1,4 @@
-# Ferment Log 🍺
+# Ferment Log 🍷
 
 A React Native app for tracking fermentation batches, built with Expo and featuring a modern UI system powered by GluestackUI and NativeWind.
 
