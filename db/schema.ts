@@ -37,7 +37,10 @@ export const batchesTable = sqliteTable(
     initialVolume: real().notNull(),
     volumeUnit: text().notNull().default("L"),
     rating: int(),
-    createdAt: text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text()
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    abv: real().notNull().default(0),
   },
   (t) => [
     check(
@@ -45,6 +48,7 @@ export const batchesTable = sqliteTable(
       sql`${t.rating} IS NULL OR (${t.rating} BETWEEN 1 AND 5)`
     ),
     check("initial_volume_pos", sql`${t.initialVolume} > 0`),
+    check("abv_range", sql`(${t.abv} BETWEEN 0 AND 100)`),
   ]
 );
 
@@ -56,7 +60,9 @@ export const logEntriesTable = sqliteTable(
     batchId: int()
       .notNull()
       .references(() => batchesTable.id, { onDelete: "cascade" }),
-    occurredAt: text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    occurredAt: text()
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
     notes: text(),
   },
   (t) => [index("idx_log_entries_batch").on(t.batchId)]

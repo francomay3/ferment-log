@@ -8,6 +8,20 @@
       "when": 1761921135910,
       "tag": "0000_good_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1762003141186,
+      "tag": "0001_demonic_squadron_supreme",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1762003252738,
+      "tag": "0002_shallow_sue_storm",
+      "breakpoints": true
     }
   ]
 }

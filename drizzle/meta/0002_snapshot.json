@@ -1,0 +1,441 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "7c22bb57-9220-40f9-9ec1-029760aaf9f5",
+  "prevId": "769609ab-634c-45bc-8e7a-3e9c153450e1",
+  "tables": {
+    "batches_table": {
+      "name": "batches_table",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "archived": {
+          "name": "archived",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "finalVolume": {
+          "name": "finalVolume",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "initialVolume": {
+          "name": "initialVolume",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "volumeUnit": {
+          "name": "volumeUnit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'L'"
+        },
+        "rating": {
+          "name": "rating",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "abv": {
+          "name": "abv",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "rating_range": {
+          "name": "rating_range",
+          "value": "\"batches_table\".\"rating\" IS NULL OR (\"batches_table\".\"rating\" BETWEEN 1 AND 5)"
+        },
+        "initial_volume_pos": {
+          "name": "initial_volume_pos",
+          "value": "\"batches_table\".\"initialVolume\" > 0"
+        },
+        "abv_range": {
+          "name": "abv_range",
+          "value": "(\"batches_table\".\"abv\" BETWEEN 0 AND 100)"
+        }
+      }
+    },
+    "ingredients_table": {
+      "name": "ingredients_table",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unit": {
+          "name": "unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "ingredients_table_name_unique": {
+          "name": "ingredients_table_name_unique",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "log_entries_table": {
+      "name": "log_entries_table",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "batchId": {
+          "name": "batchId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "occurredAt": {
+          "name": "occurredAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_log_entries_batch": {
+          "name": "idx_log_entries_batch",
+          "columns": [
+            "batchId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "log_entries_table_batchId_batches_table_id_fk": {
+          "name": "log_entries_table_batchId_batches_table_id_fk",
+          "tableFrom": "log_entries_table",
+          "tableTo": "batches_table",
+          "columnsFrom": [
+            "batchId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "log_entry_ingredients_table": {
+      "name": "log_entry_ingredients_table",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "logEntryId": {
+          "name": "logEntryId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ingredientId": {
+          "name": "ingredientId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_lei_entry": {
+          "name": "idx_lei_entry",
+          "columns": [
+            "logEntryId"
+          ],
+          "isUnique": false
+        },
+        "idx_lei_ing": {
+          "name": "idx_lei_ing",
+          "columns": [
+            "ingredientId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "log_entry_ingredients_table_logEntryId_log_entries_table_id_fk": {
+          "name": "log_entry_ingredients_table_logEntryId_log_entries_table_id_fk",
+          "tableFrom": "log_entry_ingredients_table",
+          "tableTo": "log_entries_table",
+          "columnsFrom": [
+            "logEntryId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "log_entry_ingredients_table_ingredientId_ingredients_table_id_fk": {
+          "name": "log_entry_ingredients_table_ingredientId_ingredients_table_id_fk",
+          "tableFrom": "log_entry_ingredients_table",
+          "tableTo": "ingredients_table",
+          "columnsFrom": [
+            "ingredientId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "lei_amount_pos": {
+          "name": "lei_amount_pos",
+          "value": "\"log_entry_ingredients_table\".\"amount\" > 0"
+        }
+      }
+    },
+    "log_entry_measurements_table": {
+      "name": "log_entry_measurements_table",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "logEntryId": {
+          "name": "logEntryId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "measurementTypeId": {
+          "name": "measurementTypeId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_lem_entry": {
+          "name": "idx_lem_entry",
+          "columns": [
+            "logEntryId"
+          ],
+          "isUnique": false
+        },
+        "idx_lem_type": {
+          "name": "idx_lem_type",
+          "columns": [
+            "measurementTypeId"
+          ],
+          "isUnique": false
+        },
+        "uniq_lem_entry_type": {
+          "name": "uniq_lem_entry_type",
+          "columns": [
+            "logEntryId",
+            "measurementTypeId"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "log_entry_measurements_table_logEntryId_log_entries_table_id_fk": {
+          "name": "log_entry_measurements_table_logEntryId_log_entries_table_id_fk",
+          "tableFrom": "log_entry_measurements_table",
+          "tableTo": "log_entries_table",
+          "columnsFrom": [
+            "logEntryId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "log_entry_measurements_table_measurementTypeId_measurement_types_table_id_fk": {
+          "name": "log_entry_measurements_table_measurementTypeId_measurement_types_table_id_fk",
+          "tableFrom": "log_entry_measurements_table",
+          "tableTo": "measurement_types_table",
+          "columnsFrom": [
+            "measurementTypeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "measurement_types_table": {
+      "name": "measurement_types_table",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "defaultUnit": {
+          "name": "defaultUnit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "measurement_types_table_key_unique": {
+          "name": "measurement_types_table_key_unique",
+          "columns": [
+            "key"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

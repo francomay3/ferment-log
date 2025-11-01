@@ -1,37 +1,54 @@
-import { Button, ButtonText } from "@/components/ui/button";
-import { Center } from "@/components/ui/center";
-import { HStack } from "@/components/ui/hstack";
-import { Text } from "@/components/ui/text";
-import * as db from "@/lib/db-context";
+import AddBatchModal from "@/components/AddBatchModal";
+import BatchesList from "@/components/BatchesList";
+import { Box } from "@/components/ui/box";
+import { Fab, FabIcon, FabLabel } from "@/components/ui/fab";
+import { AddIcon } from "@/components/ui/icon";
+import useDisclosure from "@/hooks/useDisclosure";
+import type { Batch } from "@/lib/db-context";
+import { useBatches } from "@/lib/db-context";
+import { ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Temp() {
-  const batches = db.useBatches();
-  const insertBatch = db.useInsertBatch();
-  const deleteBatch = db.useDeleteBatch();
-  
-  const BatchesList = batches.map((batch) => (
-    <HStack key={batch.id}>
-      <Text>{batch.name}</Text>
-      <Text>{batch.initialVolume}</Text>
-      <Button onPress={() => deleteBatch(batch.id)}>
-        <ButtonText>Delete</ButtonText>
-      </Button>
-    </HStack>
-  ));
+  const batches = useBatches();
+  const insets = useSafeAreaInsets();
+
+  const { archivedBatches, activeBatches } = batches.reduce<{
+    archivedBatches: Batch[];
+    activeBatches: Batch[];
+  }>(
+    (acc, batch) => {
+      if (batch.archived) {
+        acc.archivedBatches.push(batch);
+      } else {
+        acc.activeBatches.push(batch);
+      }
+      return acc;
+    },
+    { archivedBatches: [], activeBatches: [] }
+  );
+
+  const [
+    isAddBatchModalOpen,
+    { open: openAddBatchModal, close: closeAddBatchModal },
+  ] = useDisclosure(false);
 
   return (
-    <Center className="flex-1 gap-4 p-6">
-      <Button
-        onPress={() =>
-          insertBatch({
-            name: "New Batch",
-            initialVolume: Math.floor(Math.random() * 100),
-          })
-        }
-      >
-        <ButtonText>Add Batch</ButtonText>
-      </Button>
-      {BatchesList}
-    </Center>
+    <>
+      <Box className="flex-1" style={{ marginTop: insets.top }}>
+        <ScrollView>
+          <BatchesList title="Archived Batches" batches={archivedBatches} />
+          <BatchesList title="Active Batches" batches={activeBatches} />
+        </ScrollView>
+      </Box>
+      <Fab onPress={openAddBatchModal}>
+        <FabIcon as={AddIcon} />
+        <FabLabel>Add Batch</FabLabel>
+      </Fab>
+      <AddBatchModal
+        isOpen={isAddBatchModalOpen}
+        onClose={closeAddBatchModal}
+      />
+    </>
   );
 }

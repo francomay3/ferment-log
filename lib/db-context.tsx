@@ -19,16 +19,18 @@ function MigrationsGate({ children }: { children: ReactNode }) {
   const db = useDb();
   const { success, error } = useMigrationsDrizzle(db, migrations);
 
-  if (error) return null;     // TODO: swap for error message
+  if (error) return null; // TODO: swap for error message
 
-  if (!success) return null;  // TODO: swap for loading UI
+  if (!success) return null; // TODO: swap for loading UI
 
   return <>{children}</>;
 }
 
 export function DbProvider({ children }: { children: ReactNode }) {
   const db = useMemo(() => {
-    const expo = SQLite.openDatabaseSync("db.db", { enableChangeListener: true });
+    const expo = SQLite.openDatabaseSync("db.db", {
+      enableChangeListener: true,
+    });
     return drizzle(expo);
   }, []);
 
@@ -61,8 +63,14 @@ export function useBatch(id: number | null | undefined) {
   const db = useDb();
   const { data } = useLiveQuery(
     id == null
-      ? db.select().from(schema.batchesTable).where(eq(schema.batchesTable.id, -1)) // empty
-      : db.select().from(schema.batchesTable).where(eq(schema.batchesTable.id, id))
+      ? db
+          .select()
+          .from(schema.batchesTable)
+          .where(eq(schema.batchesTable.id, -1)) // empty
+      : db
+          .select()
+          .from(schema.batchesTable)
+          .where(eq(schema.batchesTable.id, id))
   );
   return (data ?? [])[0] ?? null;
 }
@@ -72,8 +80,14 @@ export function useLogEntries(batchId: number | null | undefined) {
   const db = useDb();
   const { data } = useLiveQuery(
     batchId == null
-      ? db.select().from(schema.logEntriesTable).where(eq(schema.logEntriesTable.batchId, -1))
-      : db.select().from(schema.logEntriesTable).where(eq(schema.logEntriesTable.batchId, batchId))
+      ? db
+          .select()
+          .from(schema.logEntriesTable)
+          .where(eq(schema.logEntriesTable.batchId, -1))
+      : db
+          .select()
+          .from(schema.logEntriesTable)
+          .where(eq(schema.logEntriesTable.batchId, batchId))
   );
   return data ?? [];
 }
@@ -97,8 +111,14 @@ export function useLogEntryIngredients(logEntryId: number | null | undefined) {
   const db = useDb();
   const { data } = useLiveQuery(
     logEntryId == null
-      ? db.select().from(schema.logEntryIngredientsTable).where(eq(schema.logEntryIngredientsTable.logEntryId, -1))
-      : db.select().from(schema.logEntryIngredientsTable).where(eq(schema.logEntryIngredientsTable.logEntryId, logEntryId))
+      ? db
+          .select()
+          .from(schema.logEntryIngredientsTable)
+          .where(eq(schema.logEntryIngredientsTable.logEntryId, -1))
+      : db
+          .select()
+          .from(schema.logEntryIngredientsTable)
+          .where(eq(schema.logEntryIngredientsTable.logEntryId, logEntryId))
   );
   return data ?? [];
 }
@@ -108,8 +128,14 @@ export function useLogEntryMeasurements(logEntryId: number | null | undefined) {
   const db = useDb();
   const { data } = useLiveQuery(
     logEntryId == null
-      ? db.select().from(schema.logEntryMeasurementsTable).where(eq(schema.logEntryMeasurementsTable.logEntryId, -1))
-      : db.select().from(schema.logEntryMeasurementsTable).where(eq(schema.logEntryMeasurementsTable.logEntryId, logEntryId))
+      ? db
+          .select()
+          .from(schema.logEntryMeasurementsTable)
+          .where(eq(schema.logEntryMeasurementsTable.logEntryId, -1))
+      : db
+          .select()
+          .from(schema.logEntryMeasurementsTable)
+          .where(eq(schema.logEntryMeasurementsTable.logEntryId, logEntryId))
   );
   return data ?? [];
 }
@@ -142,14 +168,18 @@ export function useInsertLogEntry() {
 export function useDeleteLogEntry() {
   const db = useDb();
   return async (id: number) => {
-    await db.delete(schema.logEntriesTable).where(eq(schema.logEntriesTable.id, id));
+    await db
+      .delete(schema.logEntriesTable)
+      .where(eq(schema.logEntriesTable.id, id));
   };
 }
 
 // Ingredient lines (per log entry)
 export function useAddIngredientLine() {
   const db = useDb();
-  return async (values: typeof schema.logEntryIngredientsTable.$inferInsert) => {
+  return async (
+    values: typeof schema.logEntryIngredientsTable.$inferInsert
+  ) => {
     // amount > 0 is enforced by CHECK; better to validate early too:
     if (values.amount <= 0) throw new Error("Amount must be > 0");
     await db.insert(schema.logEntryIngredientsTable).values(values);
@@ -158,20 +188,26 @@ export function useAddIngredientLine() {
 export function useDeleteIngredientLine() {
   const db = useDb();
   return async (id: number) => {
-    await db.delete(schema.logEntryIngredientsTable).where(eq(schema.logEntryIngredientsTable.id, id));
+    await db
+      .delete(schema.logEntryIngredientsTable)
+      .where(eq(schema.logEntryIngredientsTable.id, id));
   };
 }
 
 // Measurements (per log entry)
 export function useAddMeasurement() {
   const db = useDb();
-  return async (values: typeof schema.logEntryMeasurementsTable.$inferInsert) => {
+  return async (
+    values: typeof schema.logEntryMeasurementsTable.$inferInsert
+  ) => {
     // UNIQUE (logEntryId, measurementTypeId) enforced at DB; soft-guard for nicer errors:
     try {
       await db.insert(schema.logEntryMeasurementsTable).values(values);
     } catch (e: any) {
       if (String(e?.message ?? "").includes("uniq_lem_entry_type")) {
-        throw new Error("This log entry already has a value for that measurement type.");
+        throw new Error(
+          "This log entry already has a value for that measurement type."
+        );
       }
       throw e;
     }
@@ -180,7 +216,9 @@ export function useAddMeasurement() {
 export function useDeleteMeasurement() {
   const db = useDb();
   return async (id: number) => {
-    await db.delete(schema.logEntryMeasurementsTable).where(eq(schema.logEntryMeasurementsTable.id, id));
+    await db
+      .delete(schema.logEntryMeasurementsTable)
+      .where(eq(schema.logEntryMeasurementsTable.id, id));
   };
 }
 
@@ -197,3 +235,12 @@ export function useInsertMeasurementType() {
     await db.insert(schema.measurementTypesTable).values(values);
   };
 }
+
+export type Batch = typeof schema.batchesTable.$inferSelect;
+export type LogEntry = typeof schema.logEntriesTable.$inferSelect;
+export type Ingredient = typeof schema.ingredientsTable.$inferSelect;
+export type MeasurementType = typeof schema.measurementTypesTable.$inferSelect;
+export type LogEntryIngredient =
+  typeof schema.logEntryIngredientsTable.$inferSelect;
+export type LogEntryMeasurement =
+  typeof schema.logEntryMeasurementsTable.$inferSelect;
