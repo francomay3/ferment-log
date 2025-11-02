@@ -1,5 +1,5 @@
 // db/client.ts
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import {
   drizzle,
   useLiveQuery,
@@ -75,10 +75,12 @@ export function useBatch(id: number | null | undefined) {
   return (data ?? [])[0] ?? null;
 }
 
-// Log entries for a batch
+// Log entries for a batch (with ingredients and measurements)
 export function useLogEntries(batchId: number | null | undefined) {
   const db = useDb();
-  const { data } = useLiveQuery(
+
+  // Fetch log entries
+  const logEntriesResult = useLiveQuery(
     batchId == null
       ? db
           .select()
@@ -89,7 +91,45 @@ export function useLogEntries(batchId: number | null | undefined) {
           .from(schema.logEntriesTable)
           .where(eq(schema.logEntriesTable.batchId, batchId))
   );
-  return data ?? [];
+
+  const logEntries = logEntriesResult.data ?? [];
+  const entryIds = logEntries.map((e) => e.id);
+
+  // Fetch all ingredients for these log entries
+  const ingredientsResult = useLiveQuery(
+    entryIds.length === 0
+      ? db
+          .select()
+          .from(schema.logEntryIngredientsTable)
+          .where(eq(schema.logEntryIngredientsTable.logEntryId, -1))
+      : db
+          .select()
+          .from(schema.logEntryIngredientsTable)
+          .where(inArray(schema.logEntryIngredientsTable.logEntryId, entryIds))
+  );
+
+  // Fetch all measurements for these log entries
+  const measurementsResult = useLiveQuery(
+    entryIds.length === 0
+      ? db
+          .select()
+          .from(schema.logEntryMeasurementsTable)
+          .where(eq(schema.logEntryMeasurementsTable.logEntryId, -1))
+      : db
+          .select()
+          .from(schema.logEntryMeasurementsTable)
+          .where(inArray(schema.logEntryMeasurementsTable.logEntryId, entryIds))
+  );
+
+  const ingredients = ingredientsResult.data ?? [];
+  const measurements = measurementsResult.data ?? [];
+
+  // Combine data: attach ingredients and measurements to each log entry
+  return logEntries.map((entry) => ({
+    ...entry,
+    ingredients: ingredients.filter((ing) => ing.logEntryId === entry.id),
+    measurements: measurements.filter((meas) => meas.logEntryId === entry.id),
+  }));
 }
 
 // Ingredients catalog
@@ -158,11 +198,67 @@ export function useDeleteBatch() {
   };
 }
 
-// Log entries
+// Log entries (with optional ingredients and measurements)
 export function useInsertLogEntry() {
   const db = useDb();
-  return async (values: typeof schema.logEntriesTable.$inferInsert) => {
-    await db.insert(schema.logEntriesTable).values(values);
+  return async (values: {
+    entry: typeof schema.logEntriesTable.$inferInsert;
+    ingredients?: Omit<
+      typeof schema.logEntryIngredientsTable.$inferInsert,
+      "logEntryId"
+    >[];
+    measurements?: Omit<
+      typeof schema.logEntryMeasurementsTable.$inferInsert,
+      "logEntryId"
+    >[];
+  }) => {
+    // Use transaction to ensure atomicity
+    await db.transaction(async (tx) => {
+      // Insert the log entry first
+      const result = await tx
+        .insert(schema.logEntriesTable)
+        .values(values.entry)
+        .returning({ id: schema.logEntriesTable.id });
+
+      const insertedEntry = result[0];
+      if (!insertedEntry) {
+        throw new Error("Failed to insert log entry: no ID returned");
+      }
+
+      const logEntryId = insertedEntry.id;
+
+      // Insert ingredients if provided
+      if (values.ingredients && values.ingredients.length > 0) {
+        for (const ingredient of values.ingredients) {
+          if (ingredient.amount <= 0) {
+            throw new Error("Amount must be > 0");
+          }
+          await tx.insert(schema.logEntryIngredientsTable).values({
+            ...ingredient,
+            logEntryId,
+          });
+        }
+      }
+
+      // Insert measurements if provided
+      if (values.measurements && values.measurements.length > 0) {
+        for (const measurement of values.measurements) {
+          try {
+            await tx.insert(schema.logEntryMeasurementsTable).values({
+              ...measurement,
+              logEntryId,
+            });
+          } catch (e: any) {
+            if (String(e?.message ?? "").includes("uniq_lem_entry_type")) {
+              throw new Error(
+                "This log entry already has a value for that measurement type."
+              );
+            }
+            throw e;
+          }
+        }
+      }
+    });
   };
 }
 export function useDeleteLogEntry() {
@@ -244,3 +340,7 @@ export type LogEntryIngredient =
   typeof schema.logEntryIngredientsTable.$inferSelect;
 export type LogEntryMeasurement =
   typeof schema.logEntryMeasurementsTable.$inferSelect;
+export type LogEntryWithRelations = LogEntry & {
+  ingredients: LogEntryIngredient[];
+  measurements: LogEntryMeasurement[];
+};

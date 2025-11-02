@@ -11,31 +11,29 @@ import {
   ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
-import * as db from "@/lib/db-context";
+import { Batch, useInsertLogEntry } from "@/lib/db-context";
 import { faker } from "@faker-js/faker";
 
-const AddBatchModal = ({
+const AddLogEntryModal = ({
   isOpen,
   onClose,
+  batch,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  batch: Batch;
 }) => {
-  const insertBatch = db.useInsertBatch();
+  const insertLogEntry = useInsertLogEntry();
 
-  const handleAddBatch = async () => {
-    const initialVolume = faker.number.int({
-      min: 10,
-      max: 50,
-    });
-    insertBatch({
-      name: faker.lorem.word(),
-      description: faker.lorem.sentence(),
-      image: faker.image.url(),
-      initialVolume,
-      finalVolume: Math.floor(initialVolume * 0.8),
-      rating: faker.number.int({ min: 1, max: 5 }),
-      abv: faker.number.float({ min: 5, max: 15, fractionDigits: 1 }),
+  const handleAddLogEntry = async () => {
+    insertLogEntry({
+      entry: {
+        batchId: batch.id,
+        notes: faker.lorem.sentence(),
+      },
+      // ingredients and measurements can be added here when form fields are implemented
+      // ingredients: [...],
+      // measurements: [...],
     });
     onClose();
   };
@@ -45,13 +43,13 @@ const AddBatchModal = ({
       <ModalBackdrop />
       <ModalContent>
         <ModalHeader>
-          <Heading size="lg">Add Batch</Heading>
+          <Heading size="lg">Add Log Entry</Heading>
           <ModalCloseButton>
             <Icon as={CloseIcon} />
           </ModalCloseButton>
         </ModalHeader>
         <ModalBody>
-          <Text>this is where the fields for the batch will go.</Text>
+          <Text>this is where the fields for the log entry will go.</Text>
         </ModalBody>
         <ModalFooter>
           <Button
@@ -62,8 +60,8 @@ const AddBatchModal = ({
           >
             <ButtonText>Cancel</ButtonText>
           </Button>
-          <Button onPress={handleAddBatch}>
-            <ButtonText>Add Batch</ButtonText>
+          <Button onPress={handleAddLogEntry}>
+            <ButtonText>Add Log Entry</ButtonText>
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -71,4 +69,4 @@ const AddBatchModal = ({
   );
 };
 
-export default AddBatchModal;
+export default AddLogEntryModal;

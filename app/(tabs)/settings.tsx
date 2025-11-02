@@ -1,4 +1,4 @@
-import { Center } from "@/components/ui/center";
+import PageContainer from "@/components/PageContainer";
 import { HStack } from "@/components/ui/hstack";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
@@ -9,11 +9,11 @@ export default function Settings() {
   const colorMode = useColorModeStore((s) => s.colorMode);
 
   return (
-    <Center className="flex-1 p-4">
+    <PageContainer>
       <HStack className="justify-between w-full items-center">
         <Text className="text-lg font-bold">Dark Mode</Text>
         <Switch value={colorMode === "dark"} onValueChange={toggleColorMode} />
       </HStack>
-    </Center>
+    </PageContainer>
   );
 }

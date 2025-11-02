@@ -35,7 +35,6 @@ export const batchesTable = sqliteTable(
     archived: int({ mode: "boolean" }).notNull().default(false),
     finalVolume: real(),
     initialVolume: real().notNull(),
-    volumeUnit: text().notNull().default("L"),
     rating: int(),
     createdAt: text()
       .notNull()
