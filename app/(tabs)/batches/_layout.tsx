@@ -1,5 +1,3 @@
-// this should be a stack layout. the index is the batches and the [batchId] is a batch detail page.
-
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Stack } from "expo-router";
 import { useColorScheme } from "nativewind";

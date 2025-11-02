@@ -21,7 +21,6 @@ const BatchesList = ({
     return null;
   }
   return (
-    // <Box className="p-4 pb-20">
     <Box>
       <Heading>{title}</Heading>
       <VStack space="md">

@@ -13,23 +13,16 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import useDisclosure from "@/hooks/useDisclosure";
 import { useBatch } from "@/lib/db-context";
-import { useLocalSearchParams, useNavigation } from "expo-router";
-import { useLayoutEffect } from "react";
+import { useLocalSearchParams } from "expo-router";
 
 const BatchDetails = () => {
   const { batchId } = useLocalSearchParams<{ batchId: string }>();
-  const batch = useBatch(batchId ? parseInt(batchId, 10) : null);
-  const navigation = useNavigation();
+  const batch = useBatch(parseInt(batchId, 10));
+
   const [
     isAddLogEntryModalOpen,
     { open: openAddLogEntryModal, close: closeAddLogEntryModal },
   ] = useDisclosure(false);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: batch?.name || "Batch Details",
-    });
-  }, [navigation, batch?.name]);
 
   if (!batch) {
     return (
@@ -55,15 +48,15 @@ const BatchDetails = () => {
           <BatchLogEntries batch={batch} />
         </VStack>
       </PageContainer>
-      <Fab onPress={openAddLogEntryModal}>
-        <FabIcon as={AddIcon} />
-        <FabLabel>Add Log Entry</FabLabel>
-      </Fab>
       <AddLogEntryModal
         isOpen={isAddLogEntryModalOpen}
         onClose={closeAddLogEntryModal}
         batch={batch}
       />
+      <Fab onPress={openAddLogEntryModal}>
+        <FabIcon as={AddIcon} />
+        <FabLabel>Add Log Entry</FabLabel>
+      </Fab>
     </>
   );
 };

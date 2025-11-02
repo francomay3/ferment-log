@@ -21,7 +21,7 @@ export const measurementTypesTable = sqliteTable("measurement_types_table", {
   id: int().primaryKey({ autoIncrement: true }),
   key: text().notNull().unique(), // e.g. "temp", "ph", "sg"
   name: text().notNull(), // display name
-  defaultUnit: text().notNull(), // "°C", "pH", ""
+  unit: text().notNull(), // "°C", "pH", ""
 });
 
 /** BATCHES */

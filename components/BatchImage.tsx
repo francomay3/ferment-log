@@ -22,7 +22,11 @@ const BatchImage = ({ batch }: { batch: Batch }) => {
             className="w-24 h-24 rounded-full"
             alt={batch?.name}
           />
-          <Fab className="bottom-0 right-0" size="sm">
+          <Fab
+            className="bottom-0 right-0"
+            size="sm"
+            onPress={openBatchImageModal}
+          >
             <FabIcon as={EditIcon} />
           </Fab>
         </Box>

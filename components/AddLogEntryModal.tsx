@@ -11,7 +11,12 @@ import {
   ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
-import { Batch, useInsertLogEntry } from "@/lib/db-context";
+import {
+  Batch,
+  useIngredients,
+  useInsertLogEntry,
+  useMeasurementTypes,
+} from "@/lib/db-context";
 import { faker } from "@faker-js/faker";
 
 const AddLogEntryModal = ({
@@ -24,16 +29,33 @@ const AddLogEntryModal = ({
   batch: Batch;
 }) => {
   const insertLogEntry = useInsertLogEntry();
+  const ingredients = useIngredients();
+  const measurementTypes = useMeasurementTypes();
 
   const handleAddLogEntry = async () => {
+    const newIngredients = [
+      {
+        ingredientId: faker.helpers.arrayElement(ingredients).id,
+        amount: faker.number.int({ min: 1, max: 100 }),
+      },
+      {
+        ingredientId: faker.helpers.arrayElement(ingredients).id,
+        amount: faker.number.int({ min: 1, max: 100 }),
+      },
+    ];
+
     insertLogEntry({
       entry: {
         batchId: batch.id,
         notes: faker.lorem.sentence(),
       },
-      // ingredients and measurements can be added here when form fields are implemented
-      // ingredients: [...],
-      // measurements: [...],
+      ingredients: newIngredients,
+      measurements: [
+        {
+          measurementTypeId: faker.helpers.arrayElement(measurementTypes).id,
+          value: faker.number.int({ min: 1, max: 100 }),
+        },
+      ],
     });
     onClose();
   };

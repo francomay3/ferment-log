@@ -1,25 +1,32 @@
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { Batch } from "@/lib/db-context";
+import { Batch, useDeleteBatch } from "@/lib/db-context";
 import { format } from "date-fns";
 import { router } from "expo-router";
 import { Pressable } from "react-native";
 import { Rating } from "react-native-ratings";
 import { Box } from "./ui/box";
 import { Card } from "./ui/card";
+import { Fab, FabIcon } from "./ui/fab";
 import { Heading } from "./ui/heading";
 import { HStack } from "./ui/hstack";
+import { TrashIcon } from "./ui/icon";
 import { Image } from "./ui/image";
 import { Text } from "./ui/text";
 import { VStack } from "./ui/vstack";
 
 const BatchCard = ({ batch }: { batch: Batch }) => {
   const colors = useThemeColor();
+  const deleteBatch = useDeleteBatch();
 
   const handlePress = () => {
     router.push({
       pathname: "/(tabs)/batches/[batchId]",
       params: { batchId: batch.id },
     });
+  };
+
+  const handleDelete = () => {
+    deleteBatch(batch.id);
   };
 
   return (
@@ -47,7 +54,7 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
           <HStack className="justify-between items-end flex-1">
             <VStack>
               <Text size="sm" className="text-typography-500">
-                Volume: {batch.initialVolume} {batch.volumeUnit}
+                Volume: {batch.initialVolume} L
               </Text>
               <Text size="sm" className="text-typography-500">
                 ABV: {batch.abv.toFixed(1)} %
@@ -67,6 +74,9 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
             </Box>
           </HStack>
         </VStack>
+        <Fab onPress={handleDelete} size="sm">
+          <FabIcon as={TrashIcon} />
+        </Fab>
       </Card>
     </Pressable>
   );

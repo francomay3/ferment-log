@@ -1,5 +1,5 @@
 // db/client.ts
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
   drizzle,
   useLiveQuery,
@@ -7,7 +7,14 @@ import {
 } from "drizzle-orm/expo-sqlite";
 import { useMigrations as useMigrationsDrizzle } from "drizzle-orm/expo-sqlite/migrator";
 import * as SQLite from "expo-sqlite";
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import * as schema from "../db/schema";
 import migrations from "../drizzle/migrations";
 
@@ -18,10 +25,61 @@ const DbContext = createContext<DbContextValue | null>(null);
 function MigrationsGate({ children }: { children: ReactNode }) {
   const db = useDb();
   const { success, error } = useMigrationsDrizzle(db, migrations);
+  const [seeded, setSeeded] = useState(false);
+
+  useEffect(() => {
+    if (success && !seeded) {
+      const seedData = async () => {
+        try {
+          // Check if data already exists
+          const existingIngredients = await db
+            .select()
+            .from(schema.ingredientsTable)
+            .limit(1);
+          const existingMeasurements = await db
+            .select()
+            .from(schema.measurementTypesTable)
+            .limit(1);
+
+          // Seed ingredients if table is empty
+          if (existingIngredients.length === 0) {
+            await db.insert(schema.ingredientsTable).values([
+              { name: "Yeast", unit: "g" },
+              { name: "Sugar", unit: "g" },
+            ]);
+          }
+
+          // Seed measurement types if table is empty
+          if (existingMeasurements.length === 0) {
+            await db.insert(schema.measurementTypesTable).values([
+              { key: "ph", name: "pH", unit: "pH" },
+              {
+                key: "bubbles",
+                name: "Bubbles",
+                unit: "seconds/bubble",
+              },
+              { key: "temperature", name: "Temperature", unit: "°C" },
+              { key: "weight", name: "Weight", unit: "g" },
+            ]);
+          }
+
+          setSeeded(true);
+        } catch (err) {
+          console.error("Failed to seed data:", err);
+          // Set seeded to true anyway to prevent blocking
+          setSeeded(true);
+        }
+      };
+
+      seedData();
+    }
+  }, [success, seeded, db]);
 
   if (error) return null; // TODO: swap for error message
 
   if (!success) return null; // TODO: swap for loading UI
+
+  if (!seeded && success) return null; // Wait for seeding to complete
 
   return <>{children}</>;
 }
@@ -51,131 +109,63 @@ export function useDb(): DbContextValue {
    READ HOOKS (live queries)
    ========================= */
 
-// All batches
 export function useBatches() {
   const db = useDb();
   const { data } = useLiveQuery(db.select().from(schema.batchesTable));
   return data ?? [];
 }
 
-// Single batch (by id)
-export function useBatch(id: number | null | undefined) {
+export function useBatch(id: number) {
   const db = useDb();
   const { data } = useLiveQuery(
-    id == null
-      ? db
-          .select()
-          .from(schema.batchesTable)
-          .where(eq(schema.batchesTable.id, -1)) // empty
-      : db
-          .select()
-          .from(schema.batchesTable)
-          .where(eq(schema.batchesTable.id, id))
+    db.select().from(schema.batchesTable).where(eq(schema.batchesTable.id, id))
   );
   return (data ?? [])[0] ?? null;
 }
 
-// Log entries for a batch (with ingredients and measurements)
-export function useLogEntries(batchId: number | null | undefined) {
+export function useLogEntries(batchId: number) {
   const db = useDb();
 
-  // Fetch log entries
   const logEntriesResult = useLiveQuery(
-    batchId == null
-      ? db
-          .select()
-          .from(schema.logEntriesTable)
-          .where(eq(schema.logEntriesTable.batchId, -1))
-      : db
-          .select()
-          .from(schema.logEntriesTable)
-          .where(eq(schema.logEntriesTable.batchId, batchId))
+    db
+      .select()
+      .from(schema.logEntriesTable)
+      .where(eq(schema.logEntriesTable.batchId, batchId))
   );
 
-  const logEntries = logEntriesResult.data ?? [];
-  const entryIds = logEntries.map((e) => e.id);
-
-  // Fetch all ingredients for these log entries
-  const ingredientsResult = useLiveQuery(
-    entryIds.length === 0
-      ? db
-          .select()
-          .from(schema.logEntryIngredientsTable)
-          .where(eq(schema.logEntryIngredientsTable.logEntryId, -1))
-      : db
-          .select()
-          .from(schema.logEntryIngredientsTable)
-          .where(inArray(schema.logEntryIngredientsTable.logEntryId, entryIds))
-  );
-
-  // Fetch all measurements for these log entries
-  const measurementsResult = useLiveQuery(
-    entryIds.length === 0
-      ? db
-          .select()
-          .from(schema.logEntryMeasurementsTable)
-          .where(eq(schema.logEntryMeasurementsTable.logEntryId, -1))
-      : db
-          .select()
-          .from(schema.logEntryMeasurementsTable)
-          .where(inArray(schema.logEntryMeasurementsTable.logEntryId, entryIds))
-  );
-
-  const ingredients = ingredientsResult.data ?? [];
-  const measurements = measurementsResult.data ?? [];
-
-  // Combine data: attach ingredients and measurements to each log entry
-  return logEntries.map((entry) => ({
-    ...entry,
-    ingredients: ingredients.filter((ing) => ing.logEntryId === entry.id),
-    measurements: measurements.filter((meas) => meas.logEntryId === entry.id),
-  }));
+  return logEntriesResult.data ?? [];
 }
 
-// Ingredients catalog
 export function useIngredients() {
   const db = useDb();
   const { data } = useLiveQuery(db.select().from(schema.ingredientsTable));
   return data ?? [];
 }
 
-// Measurement types catalog
 export function useMeasurementTypes() {
   const db = useDb();
   const { data } = useLiveQuery(db.select().from(schema.measurementTypesTable));
   return data ?? [];
 }
 
-// Lines (ingredients) for a log entry
-export function useLogEntryIngredients(logEntryId: number | null | undefined) {
+export function useLogEntryIngredients(logEntryId: number) {
   const db = useDb();
   const { data } = useLiveQuery(
-    logEntryId == null
-      ? db
-          .select()
-          .from(schema.logEntryIngredientsTable)
-          .where(eq(schema.logEntryIngredientsTable.logEntryId, -1))
-      : db
-          .select()
-          .from(schema.logEntryIngredientsTable)
-          .where(eq(schema.logEntryIngredientsTable.logEntryId, logEntryId))
+    db
+      .select()
+      .from(schema.logEntryIngredientsTable)
+      .where(eq(schema.logEntryIngredientsTable.logEntryId, logEntryId))
   );
   return data ?? [];
 }
 
-// Measurements for a log entry
-export function useLogEntryMeasurements(logEntryId: number | null | undefined) {
+export function useLogEntryMeasurements(logEntryId: number) {
   const db = useDb();
   const { data } = useLiveQuery(
-    logEntryId == null
-      ? db
-          .select()
-          .from(schema.logEntryMeasurementsTable)
-          .where(eq(schema.logEntryMeasurementsTable.logEntryId, -1))
-      : db
-          .select()
-          .from(schema.logEntryMeasurementsTable)
-          .where(eq(schema.logEntryMeasurementsTable.logEntryId, logEntryId))
+    db
+      .select()
+      .from(schema.logEntryMeasurementsTable)
+      .where(eq(schema.logEntryMeasurementsTable.logEntryId, logEntryId))
   );
   return data ?? [];
 }
@@ -198,7 +188,6 @@ export function useDeleteBatch() {
   };
 }
 
-// Log entries (with optional ingredients and measurements)
 export function useInsertLogEntry() {
   const db = useDb();
   return async (values: {
@@ -212,9 +201,7 @@ export function useInsertLogEntry() {
       "logEntryId"
     >[];
   }) => {
-    // Use transaction to ensure atomicity
     await db.transaction(async (tx) => {
-      // Insert the log entry first
       const result = await tx
         .insert(schema.logEntriesTable)
         .values(values.entry)
@@ -227,7 +214,6 @@ export function useInsertLogEntry() {
 
       const logEntryId = insertedEntry.id;
 
-      // Insert ingredients if provided
       if (values.ingredients && values.ingredients.length > 0) {
         for (const ingredient of values.ingredients) {
           if (ingredient.amount <= 0) {
@@ -240,7 +226,6 @@ export function useInsertLogEntry() {
         }
       }
 
-      // Insert measurements if provided
       if (values.measurements && values.measurements.length > 0) {
         for (const measurement of values.measurements) {
           try {
@@ -270,7 +255,6 @@ export function useDeleteLogEntry() {
   };
 }
 
-// Ingredient lines (per log entry)
 export function useAddIngredientLine() {
   const db = useDb();
   return async (
@@ -290,7 +274,6 @@ export function useDeleteIngredientLine() {
   };
 }
 
-// Measurements (per log entry)
 export function useAddMeasurement() {
   const db = useDb();
   return async (
@@ -318,7 +301,6 @@ export function useDeleteMeasurement() {
   };
 }
 
-// Catalog writes (optional; keep if you manage catalogs in-app)
 export function useInsertIngredient() {
   const db = useDb();
   return async (values: typeof schema.ingredientsTable.$inferInsert) => {
@@ -331,6 +313,44 @@ export function useInsertMeasurementType() {
     await db.insert(schema.measurementTypesTable).values(values);
   };
 }
+
+export const useRefinedIngredients = (ingredients: LogEntryIngredient[]) => {
+  const ingredientsOptions = useIngredients();
+  const usedIngredients = ingredientsOptions.filter((option) =>
+    ingredients.some((ingredient) => ingredient.ingredientId === option.id)
+  );
+
+  return ingredients.map((ingredient) => {
+    const option = usedIngredients.find(
+      (option) => option.id === ingredient.ingredientId
+    );
+
+    return {
+      ...ingredient,
+      name: option!.name,
+      unit: option!.unit,
+    };
+  });
+};
+
+export const useRefinedMeasurements = (measurements: LogEntryMeasurement[]) => {
+  const measurementTypesOptions = useMeasurementTypes();
+  const usedMeasurementTypes = measurementTypesOptions.filter((option) =>
+    measurements.some(
+      (measurement) => measurement.measurementTypeId === option.id
+    )
+  );
+  return measurements.map((measurement) => {
+    const option = usedMeasurementTypes.find(
+      (option) => option.id === measurement.measurementTypeId
+    );
+    return {
+      ...measurement,
+      name: option!.name,
+      unit: option!.unit,
+    };
+  });
+};
 
 export type Batch = typeof schema.batchesTable.$inferSelect;
 export type LogEntry = typeof schema.logEntriesTable.$inferSelect;
