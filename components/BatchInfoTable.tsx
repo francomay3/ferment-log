@@ -3,7 +3,7 @@ import { Box } from "./ui/box";
 import { Table, TableBody, TableData, TableHead, TableRow } from "./ui/table";
 
 const tableHeadClasses =
-  "bg-background-50 border-0 border-solid border-r border-outline-200 font-medium";
+  "bg-background-100 border-0 border-solid border-r border-outline-200 font-medium";
 
 const BatchInfoTable = ({ batch }: { batch: Batch }) => {
   const tableData = [
@@ -35,7 +35,7 @@ const BatchInfoTable = ({ batch }: { batch: Batch }) => {
             return (
               <TableRow key={item.label} className={isLast ? "border-b-0" : ""}>
                 <TableHead className={tableHeadClasses}>{item.label}</TableHead>
-                <TableData>{item.value}</TableData>
+                <TableData className="bg-background-0">{item.value}</TableData>
               </TableRow>
             );
           })}

@@ -10,7 +10,7 @@ const PageContainer = ({ children }: { children: React.ReactNode }) => {
   const marginTop = hasHeader ? 0 : insets.top;
 
   return (
-    <Box className="flex-1">
+    <Box className="flex-1 bg-background-50">
       <Box style={{ height: marginTop }} className="bg-primary-500 shadow-lg" />
       <ScrollView>
         <Box className="px-4 py-4">{children}</Box>
