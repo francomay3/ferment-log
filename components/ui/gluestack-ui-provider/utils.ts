@@ -40,7 +40,7 @@ const normalizeLum = (hex: string) => {
   return hsl2hex({ h, s, l: 50 });
 };
 
-export const getSchemeSwatches = (seed: string) => {
+export const getVars = (seed: string) => {
   const primary = normalizeLum(seed);
   const secondary = scheme(seed, "analogous")[1];
   const tertiary = scheme(seed, "complementary")[1];
@@ -67,6 +67,7 @@ export const getSchemeSwatches = (seed: string) => {
     maxL: 0.9804,
     minL: 0.2,
     variant: "vibrant",
+    lightnessFactor: 1.7,
   });
   const errorSwatchLight = swatch(error, {
     maxL: 0.9549,
@@ -160,26 +161,29 @@ export const getSchemeSwatches = (seed: string) => {
   });
 
   return {
-    primaryLight: createColorVars(primarySwatchLight, "primary"),
-    secondaryLight: createColorVars(secondarySwatchLight, "secondary"),
-    tertiaryLight: createColorVars(tertiarySwatchLight, "tertiary"),
-    typographyLight: createColorVars(typographySwatchLight, "typography"),
-    outlineLight: createColorVars(outlineSwatchLight, "outline"),
-    backgroundLight: createColorVars(backgroundSwatchLight, "background"),
-    errorLight: createColorVars(errorSwatchLight, "error"),
-    successLight: createColorVars(successSwatchLight, "success"),
-    warningLight: createColorVars(warningSwatchLight, "warning"),
-    infoLight: createColorVars(infoSwatchLight, "info"),
-
-    primaryDark: createColorVars(primarySwatchDark, "primary"),
-    secondaryDark: createColorVars(secondarySwatchDark, "secondary"),
-    tertiaryDark: createColorVars(tertiarySwatchDark, "tertiary"),
-    typographyDark: createColorVars(typographySwatchDark, "typography"),
-    outlineDark: createColorVars(outlineSwatchDark, "outline"),
-    backgroundDark: createColorVars(backgroundSwatchDark, "background"),
-    errorDark: createColorVars(errorSwatchDark, "error"),
-    successDark: createColorVars(successSwatchDark, "success"),
-    warningDark: createColorVars(warningSwatchDark, "warning"),
-    infoDark: createColorVars(infoSwatchDark, "info"),
+    light: {
+      ...createColorVars(primarySwatchLight, "primary"),
+      ...createColorVars(secondarySwatchLight, "secondary"),
+      ...createColorVars(tertiarySwatchLight, "tertiary"),
+      ...createColorVars(typographySwatchLight, "typography"),
+      ...createColorVars(outlineSwatchLight, "outline"),
+      ...createColorVars(backgroundSwatchLight, "background"),
+      ...createColorVars(errorSwatchLight, "error"),
+      ...createColorVars(successSwatchLight, "success"),
+      ...createColorVars(warningSwatchLight, "warning"),
+      ...createColorVars(infoSwatchLight, "info"),
+    },
+    dark: {
+      ...createColorVars(primarySwatchDark, "primary"),
+      ...createColorVars(secondarySwatchDark, "secondary"),
+      ...createColorVars(tertiarySwatchDark, "tertiary"),
+      ...createColorVars(typographySwatchDark, "typography"),
+      ...createColorVars(outlineSwatchDark, "outline"),
+      ...createColorVars(backgroundSwatchDark, "background"),
+      ...createColorVars(errorSwatchDark, "error"),
+      ...createColorVars(successSwatchDark, "success"),
+      ...createColorVars(warningSwatchDark, "warning"),
+      ...createColorVars(infoSwatchDark, "info"),
+    },
   };
 };

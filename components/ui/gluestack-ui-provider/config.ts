@@ -1,43 +1,16 @@
 "use client";
 import { random } from "colorizr";
 import { vars } from "nativewind";
-import { getSchemeSwatches } from "./utils";
+import { getVars } from "./utils";
 
 const PRIMARY_COLOR_SEED = random();
-const swatches = getSchemeSwatches(PRIMARY_COLOR_SEED);
-
-const lightVars = {
-  ...swatches.primaryLight,
-  ...swatches.secondaryLight,
-  ...swatches.tertiaryLight,
-  ...swatches.typographyLight,
-  ...swatches.outlineLight,
-  ...swatches.backgroundLight,
-  ...swatches.errorLight,
-  ...swatches.successLight,
-  ...swatches.warningLight,
-  ...swatches.infoLight,
-};
-
-const darkVars = {
-  ...swatches.primaryDark,
-  ...swatches.secondaryDark,
-  ...swatches.tertiaryDark,
-  ...swatches.typographyDark,
-  ...swatches.outlineDark,
-  ...swatches.backgroundDark,
-  ...swatches.errorDark,
-  ...swatches.successDark,
-  ...swatches.warningDark,
-  ...swatches.infoDark,
-};
-
+const { dark, light } = getVars(PRIMARY_COLOR_SEED);
 export const config = {
-  light: vars(lightVars),
-  dark: vars(darkVars),
+  light: vars(light),
+  dark: vars(dark),
 };
 
-export { darkVars, lightVars };
+export { dark, light };
 
 export type ThemeColor =
   | "--color-primary-0"
